@@ -1,0 +1,5 @@
+# One X handle per line.
+# You can also set repository variable X_ACCOUNTS instead.
+# Example:
+# NASA
+# SpaceX

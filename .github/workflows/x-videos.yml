@@ -1,0 +1,59 @@
+name: X videos to Telegram
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: x-video-collector
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install collector
+        run: pip install -r requirements.txt
+
+      - name: Collect new X videos
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          X_COOKIES_B64: ${{ secrets.X_COOKIES_B64 }}
+          X_ACCOUNTS: ${{ vars.X_ACCOUNTS }}
+          X_POST_RANGE: "1-40"
+          SEND_INITIAL_BACKLOG: "false"
+          TELEGRAM_MAX_MB: "49"
+        run: python collector.py
+
+      - name: Persist dedupe state
+        if: always()
+        run: |
+          if git diff --quiet -- state/seen.json; then
+            echo "No state changes."
+            exit 0
+          fi
+
+          git config user.name "x-video-collector[bot]"
+          git config user.email "x-video-collector[bot]@users.noreply.github.com"
+          git add state/seen.json
+          git commit -m "chore: update X collector state"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
