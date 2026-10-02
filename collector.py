@@ -158,12 +158,28 @@ def download_account(account, seen_ids, output_dir, cookie_path):
     if cookie_path:
         cmd += ["-o", f"extractor.twitter.cookies={cookie_path}"]
     cmd.append(f"https://x.com/{account}")
-    log(f"Scanning @{account}")
-    proc = subprocess.run(cmd, text=True, capture_output=True, timeout=240)
-    if proc.stdout.strip():
-        log(proc.stdout.strip()[-3000:])
-    if proc.returncode != 0:
-        raise RuntimeError(proc.stderr.strip()[-3000:] or f"gallery-dl exited {proc.returncode}")
+    delays = [0, 20, 45]
+    last_error = None
+    proc = None
+    for attempt, delay in enumerate(delays, start=1):
+        if delay:
+            log(f"Retry @{account} in {delay}s after transient X/Cloudflare failure")
+            time.sleep(delay)
+        log(f"Scanning @{account} (attempt {attempt}/{len(delays)})")
+        proc = subprocess.run(cmd, text=True, capture_output=True, timeout=120)
+        if proc.stdout.strip():
+            log(proc.stdout.strip()[-3000:])
+        if proc.returncode == 0:
+            break
+        last_error = proc.stderr.strip()[-3000:] or f"gallery-dl exited {proc.returncode}"
+        transient = any(token in last_error.lower() for token in [
+            "cloudflare challenge", "403 forbidden", "request timed out",
+            "temporarily unavailable", "connection reset",
+        ])
+        if not transient:
+            raise RuntimeError(last_error)
+    if proc is None or proc.returncode != 0:
+        raise RuntimeError(last_error or "gallery-dl failed after retries")
     items = {}
     for p in output_dir.rglob("*"):
         if not p.is_file() or p.suffix.lower() not in VIDEO_EXTS:
