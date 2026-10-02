@@ -192,6 +192,20 @@ def main():
     total_sent = 0
     changed = False
 
+    if not state.get("telegram_verified"):
+        me = tg("getMe", timeout=30)
+        send_text(
+            "✅ X Video Collector ist aktiv.\n"
+            "Überwachung: " + ", ".join(f"@{a}" for a in accounts) + "\n"
+            "Intervall: alle 5 Minuten"
+        )
+        state["telegram_verified"] = {
+            "at_unix": now,
+            "bot_username": me.get("username"),
+            "chat_id": CHAT_ID,
+        }
+        changed = True
+
     with tempfile.TemporaryDirectory(prefix="xcollector-") as tmp:
         tmp = Path(tmp)
         for account in accounts:
