@@ -1,4 +1,11 @@
 {
-  "version": 1,
-  "accounts": {}
+  "accounts": {
+    "horneyvids_": {
+      "handle": "horneyvids_",
+      "initialized": false,
+      "seen": []
+    }
+  },
+  "heartbeat_unix": 1790983292,
+  "version": 1
 }
