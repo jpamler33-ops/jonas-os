@@ -4,6 +4,14 @@ on:
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "collector.py"
+      - "requirements.txt"
+      - "config/**"
+      - ".github/workflows/x-videos.yml"
 
 permissions:
   contents: write
