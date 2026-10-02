@@ -11,6 +11,7 @@ on:
       - "collector.py"
       - "requirements.txt"
       - "config/**"
+      - "scripts/**"
       - ".github/workflows/x-videos.yml"
 
 permissions:
@@ -21,15 +22,37 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  collect:
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 2
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      account_count: ${{ steps.plan.outputs.account_count }}
+      shard_count: ${{ steps.plan.outputs.shard_count }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+
+      - name: Plan account shards
+        id: plan
+        env:
+          X_ACCOUNTS: ${{ vars.X_ACCOUNTS }}
+          SHARD_SIZE: "3"
+        run: python scripts/plan_shards.py
+
+  collect:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Python
         uses: actions/setup-python@v5
@@ -37,24 +60,76 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      - name: Restore gallery-dl session cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/gallery-dl
+          key: ${{ runner.os }}-gallerydl-shard-${{ matrix.id }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-gallerydl-shard-${{ matrix.id }}-
+
       - name: Install collector
         run: pip install -r requirements.txt
 
-      - name: Collect new X videos
+      - name: Seed shard state
+        run: cp state/seen.json "state/shard-${{ matrix.id }}.json"
+
+      - name: Collect X videos
+        id: collect
+        continue-on-error: true
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: "2062625239"
           X_COOKIES_B64: ${{ secrets.X_COOKIES_B64 }}
           X_AUTH_TOKEN: ${{ secrets.X_AUTH_TOKEN }}
           X_CT0: ${{ secrets.X_CT0 }}
-          X_ACCOUNTS: ${{ vars.X_ACCOUNTS }}
+          X_ACCOUNTS: ${{ matrix.accounts }}
+          STATE_FILE: state/shard-${{ matrix.id }}.json
           X_POST_RANGE: "1-40"
           SEND_INITIAL_BACKLOG: "false"
           TELEGRAM_MAX_MB: "49"
+          VERIFY_TELEGRAM: "false"
         run: python collector.py
 
-      - name: Persist dedupe state
+      - name: Upload shard state
         if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: x-state-${{ matrix.id }}
+          path: state/shard-${{ matrix.id }}.json
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Report shard warning
+        if: steps.collect.outcome == 'failure'
+        run: echo "::warning::Shard ${{ matrix.id }} had an X/Telegram collection error; other shards continue."
+
+  merge:
+    needs:
+      - plan
+      - collect
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download shard states
+        uses: actions/download-artifact@v4
+        with:
+          pattern: x-state-*
+          path: shard-states
+          merge-multiple: true
+
+      - name: Merge shard states
+        run: python scripts/merge_states.py
+
+      - name: Persist merged state
         run: |
           if git diff --quiet -- state/seen.json; then
             echo "No state changes."
@@ -64,6 +139,11 @@ jobs:
           git config user.name "x-video-collector[bot]"
           git config user.email "x-video-collector[bot]@users.noreply.github.com"
           git add state/seen.json
-          git commit -m "chore: update X collector state"
-          git pull --rebase origin "${GITHUB_REF_NAME}"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git commit -m "chore: merge X collector shard state"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Summary
+        run: |
+          echo "Accounts: ${{ needs.plan.outputs.account_count }}"
+          echo "Shards: ${{ needs.plan.outputs.shard_count }}"
