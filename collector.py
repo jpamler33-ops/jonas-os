@@ -23,6 +23,8 @@ TELEGRAM_MAX_MB = int(os.getenv("TELEGRAM_MAX_MB", "49"))
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 X_COOKIES_B64 = os.getenv("X_COOKIES_B64", "").strip()
+X_AUTH_TOKEN = os.getenv("X_AUTH_TOKEN", "").strip()
+X_CT0 = os.getenv("X_CT0", "").strip()
 X_ACCOUNTS_ENV = os.getenv("X_ACCOUNTS", "").strip()
 
 def log(msg):
@@ -73,14 +75,28 @@ def save_state(state):
 
 def materialize_cookies():
     COOKIE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    if not X_COOKIES_B64:
-        return None
-    try:
-        COOKIE_FILE.write_bytes(base64.b64decode(X_COOKIES_B64))
+    if X_COOKIES_B64:
+        try:
+            COOKIE_FILE.write_bytes(base64.b64decode(X_COOKIES_B64))
+            os.chmod(COOKIE_FILE, 0o600)
+            return COOKIE_FILE
+        except Exception as exc:
+            raise RuntimeError(f"X_COOKIES_B64 invalid: {exc}")
+
+    if X_AUTH_TOKEN:
+        # Minimal Netscape cookie jar for an authenticated X session.
+        # auth_token is the key cookie; ct0 is included when available.
+        lines = [
+            "# Netscape HTTP Cookie File",
+            f".x.com\tTRUE\t/\tTRUE\t2147483647\tauth_token\t{X_AUTH_TOKEN}",
+        ]
+        if X_CT0:
+            lines.append(f".x.com\tTRUE\t/\tTRUE\t2147483647\tct0\t{X_CT0}")
+        COOKIE_FILE.write_text("\n".join(lines) + "\n", "utf-8")
         os.chmod(COOKIE_FILE, 0o600)
         return COOKIE_FILE
-    except Exception as exc:
-        raise RuntimeError(f"X_COOKIES_B64 invalid: {exc}")
+
+    return None
 
 def tg(method, *, data=None, files=None, timeout=180):
     url = f"https://api.telegram.org/bot{TOKEN}/{method}"
