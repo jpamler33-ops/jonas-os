@@ -48,5 +48,10 @@
     }
   },
   "heartbeat_unix": 1790983292,
+  "telegram_verified": {
+    "at_unix": 1790984397,
+    "bot_username": "BIGGNUDEbot",
+    "chat_id": "2062625239"
+  },
   "version": 1
 }
