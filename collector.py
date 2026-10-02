@@ -11,7 +11,7 @@ from pathlib import Path
 
 import requests
 
-STATE_FILE = Path("state/seen.json")
+STATE_FILE = Path(os.getenv("STATE_FILE", "state/seen.json"))
 COOKIE_FILE = Path(".runtime/x-cookies.txt")
 VIDEO_EXTS = {".mp4", ".webm", ".mkv", ".mov"}
 TWEET_RE = re.compile(r"^(?P<account>[A-Za-z0-9_]+)_(?P<tweet>\d{8,})_(?P<num>\d+)\.(?P<ext>[A-Za-z0-9]+)$")
@@ -19,6 +19,7 @@ MAX_SEEN_PER_ACCOUNT = 1000
 POST_RANGE = os.getenv("X_POST_RANGE", "1-40")
 SEND_INITIAL_BACKLOG = os.getenv("SEND_INITIAL_BACKLOG", "false").lower() == "true"
 TELEGRAM_MAX_MB = int(os.getenv("TELEGRAM_MAX_MB", "49"))
+VERIFY_TELEGRAM = os.getenv("VERIFY_TELEGRAM", "true").lower() == "true"
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
@@ -153,7 +154,6 @@ def download_account(account, seen_ids, output_dir, cookie_path):
         "-o", "extractor.twitter.retweets=false",
         "-o", "extractor.twitter.replies=false",
         "-o", "extractor.twitter.pinned=true",
-        "-o", "transaction-id=false",
         "-o", "extractor.twitter.filename={author[name]}_{tweet_id}_{num}.{extension}",
     ]
     if cookie_path:
@@ -209,7 +209,7 @@ def main():
     total_sent = 0
     changed = False
 
-    if not state.get("telegram_verified"):
+    if VERIFY_TELEGRAM and not state.get("telegram_verified"):
         me = tg("getMe", timeout=30)
         send_text(
             "✅ X Video Collector ist aktiv.\n"
