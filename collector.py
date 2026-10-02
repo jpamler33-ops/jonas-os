@@ -153,6 +153,7 @@ def download_account(account, seen_ids, output_dir, cookie_path):
         "-o", "extractor.twitter.retweets=false",
         "-o", "extractor.twitter.replies=false",
         "-o", "extractor.twitter.pinned=true",
+        "-o", "transaction-id=false",
         "-o", "extractor.twitter.filename={author[name]}_{tweet_id}_{num}.{extension}",
     ]
     if cookie_path:
