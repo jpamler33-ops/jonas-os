@@ -35,7 +35,7 @@ jobs:
       - name: Collect new X videos
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID: "2062625239"
           X_COOKIES_B64: ${{ secrets.X_COOKIES_B64 }}
           X_ACCOUNTS: ${{ vars.X_ACCOUNTS }}
           X_POST_RANGE: "1-40"
