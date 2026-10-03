@@ -11,7 +11,8 @@ def normalize(value):
     value = value.replace("https://x.com/", "").replace("https://twitter.com/", "")
     value = value.split("/", 1)[0].lstrip("@")
     if not HANDLE.fullmatch(value):
-        raise SystemExit(f"Invalid X account: {value!r}")
+        print(f"WARNING: skipping invalid X account: {value!r}")
+        return None
     return value
 
 raw_env = os.getenv("X_ACCOUNTS", "").strip()
