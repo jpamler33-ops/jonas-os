@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "policy": "creator_only_strict",
+  "note": "Only clearly self-posting adult creator accounts are enabled. Repost/promotional and unverified sources stay disabled until verified.",
+  "sources": [
+    {
+      "handle": "horneyvids_",
+      "enabled": false,
+      "type": "probable_repost",
+      "confidence": "medium"
+    },
+    {
+      "handle": "bigassaddict",
+      "enabled": false,
+      "type": "repost_promotional",
+      "confidence": "high"
+    },
+    {
+      "handle": "lesbihookup02",
+      "enabled": false,
+      "type": "community_promotional",
+      "confidence": "high"
+    },
+    {
+      "handle": "netta_xox",
+      "enabled": true,
+      "type": "creator_self",
+      "confidence": "high",
+      "adult_verified_by_public_bio": true
+    },
+    {
+      "handle": "hyjsju9834",
+      "enabled": false,
+      "type": "unverified",
+      "confidence": "low"
+    },
+    {
+      "handle": "daisyblooomco",
+      "enabled": false,
+      "type": "unverified",
+      "confidence": "low"
+    },
+    {
+      "handle": "aubuchon15",
+      "enabled": false,
+      "type": "unverified",
+      "confidence": "low"
+    },
+    {
+      "handle": "lesbianpostx",
+      "enabled": false,
+      "type": "unverified",
+      "confidence": "low"
+    },
+    {
+      "handle": "game_of_lesbian",
+      "enabled": false,
+      "type": "unverified",
+      "confidence": "low"
+    },
+    {
+      "handle": "dailyyysex",
+      "enabled": false,
+      "type": "unverified",
+      "confidence": "low"
+    },
+    {
+      "handle": "girlsafter18",
+      "enabled": false,
+      "type": "affiliate_repost",
+      "confidence": "high"
+    },
+    {
+      "handle": "assg00nette",
+      "enabled": false,
+      "type": "unverified",
+      "confidence": "low"
+    },
+    {
+      "handle": "pleazuremasters",
+      "enabled": false,
+      "type": "unverified",
+      "confidence": "low"
+    },
+    {
+      "handle": "velvetmodels757",
+      "enabled": false,
+      "type": "model_promotional_repost",
+      "confidence": "high"
+    },
+    {
+      "handle": "youngin_ina_cut",
+      "enabled": false,
+      "type": "unverified",
+      "confidence": "low"
+    },
+    {
+      "handle": "lesbiaviewdaily",
+      "enabled": false,
+      "type": "repost_aggregator",
+      "confidence": "high"
+    },
+    {
+      "handle": "povcream",
+      "enabled": false,
+      "type": "repost_aggregator",
+      "confidence": "high"
+    },
+    {
+      "handle": "nudestiktoktl",
+      "enabled": false,
+      "type": "credited_repost_aggregator",
+      "confidence": "high"
+    },
+    {
+      "handle": "ofmodler",
+      "enabled": false,
+      "type": "unverified",
+      "confidence": "low"
+    },
+    {
+      "handle": "goonerz_club",
+      "enabled": false,
+      "type": "probable_repost",
+      "confidence": "medium"
+    },
+    {
+      "handle": "wetlesbianx",
+      "enabled": false,
+      "type": "affiliate_promotional",
+      "confidence": "medium"
+    },
+    {
+      "handle": "latinaxtapes",
+      "enabled": false,
+      "type": "unverified",
+      "confidence": "low"
+    },
+    {
+      "handle": "lesbianxnsfw",
+      "enabled": false,
+      "type": "unverified",
+      "confidence": "low"
+    }
+  ]
+}
